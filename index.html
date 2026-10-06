@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>MATRIX YOUTUBE EXTRACTOR</title>
+    <title>MATRIX DIAGNOSTIC APP</title>
     
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
@@ -15,14 +15,10 @@
                 extend: {
                     fontFamily: { mono: ['"Share Tech Mono"', 'monospace'] },
                     colors: {
-                        matrix: {
-                            black: '#000000', dark: '#051005', green: '#00FF41',
-                            light: '#b8ffd0', glow: 'rgba(0, 255, 65, 0.5)'
-                        }
+                        matrix: { black: '#000000', green: '#00FF41', light: '#b8ffd0' }
                     },
                     boxShadow: {
-                        'neon': '0 0 10px rgba(0, 255, 65, 0.5), inset 0 0 10px rgba(0, 255, 65, 0.2)',
-                        'neon-strong': '0 0 20px rgba(0, 255, 65, 0.8), inset 0 0 15px rgba(0, 255, 65, 0.4)'
+                        'neon': '0 0 10px rgba(0, 255, 65, 0.5), inset 0 0 10px rgba(0, 255, 65, 0.2)'
                     }
                 }
             }
@@ -35,93 +31,79 @@
         .terminal-scroll::-webkit-scrollbar { width: 8px; }
         .terminal-scroll::-webkit-scrollbar-track { background: rgba(0, 20, 0, 0.8); border-left: 1px solid #00FF41; }
         .terminal-scroll::-webkit-scrollbar-thumb { background: rgba(0, 255, 65, 0.3); }
-        .terminal-scroll::-webkit-scrollbar-thumb:hover { background: #00FF41; }
-        input:-webkit-autofill {
-            -webkit-box-shadow: 0 0 0 30px black inset !important;
-            -webkit-text-fill-color: #00FF41 !important;
-            transition: background-color 5000s ease-in-out 0s;
-        }
-        .glitch-anim { animation: textGlitch 2s infinite; }
-        @keyframes textGlitch {
-            0%, 95%, 100% { opacity: 1; transform: translate(0, 0); }
-            96% { opacity: 0.8; transform: translate(-2px, 1px); }
-            97% { opacity: 0.9; transform: translate(2px, -1px); }
-        }
     </style>
 </head>
 <body class="min-h-screen flex items-center justify-center p-4">
     
     <canvas id="matrix-canvas"></canvas>
 
-    <main class="w-full max-w-4xl bg-matrix-black/80 backdrop-blur-sm border border-matrix-green shadow-neon p-6 flex flex-col gap-6 relative z-10">
+    <main class="w-full max-w-4xl bg-matrix-black/90 backdrop-blur-sm border border-matrix-green shadow-neon p-6 flex flex-col gap-6 relative z-10">
         <header class="border-b border-matrix-green/50 pb-4 text-center sm:text-left">
-            <h1 class="text-2xl sm:text-4xl font-bold tracking-widest glitch-anim drop-shadow-[0_0_5px_rgba(0,255,65,0.8)]">
-                MATRIX YOUTUBE EXTRACTOR
+            <h1 class="text-2xl sm:text-3xl font-bold tracking-widest">
+                MATRIX DIAGNOSTIC INTERFACE
             </h1>
-            <p class="text-matrix-green/70 text-sm mt-2">SYSTEM.PROTOCOL: BULLETPROOF_API_MODE</p>
+            <p class="text-matrix-green/70 text-sm mt-2">SYSTEM.PROTOCOL: CLICK_TEST</p>
         </header>
 
-        <div id="extractForm" class="flex flex-col gap-5">
+        <div class="flex flex-col gap-5">
             <div class="flex flex-col gap-2">
-                <label for="urlInput" class="text-sm font-bold tracking-widest text-matrix-light">> TARGET_YOUTUBE_URL</label>
+                <label for="urlInput" class="text-sm font-bold tracking-widest text-matrix-light">> TARGET_URL</label>
                 <div class="flex flex-col sm:flex-row gap-4">
-                    <input type="url" id="urlInput" required
-                        class="block w-full flex-1 px-4 py-3 bg-black border border-matrix-green text-matrix-green focus:outline-none focus:shadow-neon-strong transition-all"
-                        placeholder="https://youtube.com/watch?v=..." autocomplete="off">
+                    <input type="text" id="urlInput" 
+                        class="block w-full flex-1 px-4 py-3 bg-black border border-matrix-green text-matrix-green focus:outline-none"
+                        placeholder="Вставь любую ссылку..." autocomplete="off">
                     
-                    <button type="button" id="submitBtn" class="bg-black border border-matrix-green text-matrix-green hover:bg-matrix-green hover:text-black font-bold py-3 px-8 transition-all shadow-neon whitespace-nowrap uppercase tracking-widest cursor-pointer">
+                    <button type="button" id="submitBtn" class="bg-black border border-matrix-green text-matrix-green hover:bg-matrix-green hover:text-black font-bold py-3 px-8 transition-all shadow-neon uppercase tracking-widest cursor-pointer">
                         INITIATE_EXTRACTION
                     </button>
                 </div>
             </div>
         </div>
 
-        <section class="flex flex-col border border-matrix-green h-64 sm:h-80 bg-black/90 relative">
+        <section class="flex flex-col border border-matrix-green h-64 bg-black/90 relative">
             <div class="flex items-center justify-between px-4 py-2 border-b border-matrix-green/50 bg-matrix-green/10">
-                <h3 class="text-xs font-bold uppercase tracking-widest text-matrix-light">Extraction_Logs</h3>
+                <h3 class="text-xs font-bold uppercase tracking-widest text-matrix-light">Terminal_Logs</h3>
                 <span class="text-xs animate-pulse text-matrix-green">_ONLINE</span>
             </div>
             <div id="terminal" class="flex-1 overflow-y-auto terminal-scroll text-xs sm:text-sm p-4 space-y-1">
-                <div class="text-matrix-green/70">> SYSTEM INITIALIZED...</div>
-                <div class="text-matrix-green/70">> AWAITING YOUTUBE TARGET...</div>
+                <div class="text-matrix-green/70">> СИСТЕМА ЗАГРУЖЕНА. НАЖМИ КНОПКУ ИНИЦИАЦИИ...</div>
             </div>
         </section>
     </main>
 
     <script>
+        // Инициализация Telegram WebApp
         if (window.Telegram && window.Telegram.WebApp) {
             try {
                 window.Telegram.WebApp.expand();
                 window.Telegram.WebApp.ready();
-            } catch (e) { console.log("Браузерный режим"); }
+            } catch (e) {}
         }
 
+        // Фон Матрицы
         const canvas = document.getElementById('matrix-canvas');
         const ctx = canvas.getContext('2d');
         let width, height, columns;
         const drops = [];
-        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%^&*()ｱｲｳｴｵｶｷｸｹｺｻｼｽｾｿﾀﾁﾂﾃﾄﾅﾆﾇﾈﾉﾊﾋﾌﾍﾎﾏﾐﾑﾒﾓﾔﾕﾖﾗﾘﾙﾚﾛﾜﾝ'.split('');
+        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%^&*()'.split('');
 
         function initMatrix() {
             width = canvas.width = window.innerWidth;
             height = canvas.height = window.innerHeight;
-            const fontSize = window.innerWidth < 600 ? 12 : 16;
-            columns = width / fontSize;
+            columns = width / 16;
             drops.length = 0;
             for (let x = 0; x < columns; x++) drops[x] = Math.random() * -100;
-            ctx.font = fontSize + 'px "Share Tech Mono"';
+            ctx.font = '16px "Share Tech Mono"';
         }
 
         function drawMatrix() {
             ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
             ctx.fillRect(0, 0, width, height);
             ctx.fillStyle = '#0F0';
-            const fontSize = window.innerWidth < 600 ? 12 : 16;
-            ctx.font = fontSize + 'px "Share Tech Mono"';
             for (let i = 0; i < drops.length; i++) {
                 const text = chars[Math.floor(Math.random() * chars.length)];
-                ctx.fillText(text, i * fontSize, drops[i] * fontSize);
-                if (drops[i] * fontSize > height && Math.random() > 0.975) drops[i] = 0;
+                ctx.fillText(text, i * 16, drops[i] * 16);
+                if (drops[i] * 16 > height && Math.random() > 0.975) drops[i] = 0;
                 drops[i]++;
             }
         }
@@ -129,15 +111,75 @@
         window.addEventListener('resize', initMatrix);
         setInterval(drawMatrix, 33);
 
-        // --- ВАЖНО: ПРОВЕРЬ ЭТУ ССЫЛКУ! ---
-        // Она должна заканчиваться на .workers.dev, а НЕ на .github.io
-        const BACKEND_URL = "https://floral-art-1918.nikita-tkachen2002.workers.dev";
+        // --- ССЫЛКА НА ТВОЙ CLOUDFLARE WORKER ---
+        const BACKEND_URL = "https://icy-shape-e24a.nikita-tkachen2002.workers.dev";
 
         const submitBtn = document.getElementById('submitBtn');
         const urlInput = document.getElementById('urlInput');
         const terminal = document.getElementById('terminal');
 
-        function addLog(message) {
+        function addLog(message, isError = false) {
             const time = new Date().toLocaleTimeString('en-US', { hour12: false, hour: "2-digit", minute: "2-digit", second: "2-digit" });
             const line = document.createElement('div');
-            if (message.includes("ERROR") || message.includes("FAILED")) {
+            if (isError) {
+                line.className = 'text-red-500 font-bold';
+                line.innerHTML = `[${time}] !! ${message}`;
+            } else {
+                line.className = 'text-matrix-green';
+                line.innerHTML = `[${time}] > ${message}`;
+            }
+            terminal.appendChild(line);
+            terminal.scrollTop = terminal.scrollHeight;
+        }
+
+        // Проверяем, реагирует ли кнопка на нажатие
+        submitBtn.addEventListener('click', async () => {
+            const targetUrl = urlInput.value.trim();
+            
+            addLog("КНОПКА НАЖАТА УСПЕШНО!");
+
+            if (!targetUrl) {
+                addLog("ОШИБКА: Поле ввода пустое!", true);
+                return;
+            }
+
+            addLog(`Целевая ссылка получена: ${targetUrl}`);
+            
+            const tgUser = window.Telegram?.WebApp?.initDataUnsafe?.user;
+            const chatId = tgUser ? tgUser.id : null;
+
+            if (chatId) {
+                addLog(`Найден Telegram Chat ID: ${chatId}`);
+            } else {
+                addLog("ВНИМАНИЕ: Chat ID не найден (открыто вне Telegram).", true);
+            }
+
+            addLog("Отправка запроса на Cloudflare Worker...");
+
+            try {
+                const response = await fetch(BACKEND_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        url: targetUrl,
+                        chat_id: chatId 
+                    })
+                });
+
+                const textResp = await response.text();
+                addLog(`Ответ сервера получен. Статус: ${response.status}`);
+                addLog(`Текст ответа: ${textResp}`);
+
+                if (response.ok) {
+                    addLog("ТЕСТ СВЯЗИ ПРОШЕЛ УСПЕШНО!");
+                } else {
+                    addLog("Сервер вернул ошибку.", true);
+                }
+
+            } catch (err) {
+                addLog(`КРИТИЧЕСКАЯ ОШИБКА СЕТИ: ${err.message}`, true);
+            }
+        });
+    </script>
+</body>
+</html>
