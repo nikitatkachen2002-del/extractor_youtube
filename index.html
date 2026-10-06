@@ -58,7 +58,7 @@
             <h1 class="text-2xl sm:text-4xl font-bold tracking-widest glitch-anim drop-shadow-[0_0_5px_rgba(0,255,65,0.8)]">
                 MATRIX YOUTUBE EXTRACTOR
             </h1>
-            <p class="text-matrix-green/70 text-sm mt-2">SYSTEM.PROTOCOL: ULTIMATE_MULTI_QUALITY</p>
+            <p class="text-matrix-green/70 text-sm mt-2">SYSTEM.PROTOCOL: BULLETPROOF_API_MODE</p>
         </header>
 
         <div id="extractForm" class="flex flex-col gap-5">
@@ -129,8 +129,9 @@
         window.addEventListener('resize', initMatrix);
         setInterval(drawMatrix, 33);
 
-        // --- УКАЖИ ЗДЕСЬ ССЫЛКУ НА СВОЙ CLOUDFLARE WORKER БЕЗ СЛЭША НА КОНЦЕ ---
-        const BACKEND_URL = "floral-art-1918.nikita-tkachen2002.workers.dev";
+        // --- ВАЖНО: ПРОВЕРЬ ЭТУ ССЫЛКУ! ---
+        // Она должна заканчиваться на .workers.dev, а НЕ на .github.io
+        const BACKEND_URL = "https://floral-art-1918.nikita-tkachen2002.workers.dev";
 
         const submitBtn = document.getElementById('submitBtn');
         const urlInput = document.getElementById('urlInput');
@@ -140,78 +141,3 @@
             const time = new Date().toLocaleTimeString('en-US', { hour12: false, hour: "2-digit", minute: "2-digit", second: "2-digit" });
             const line = document.createElement('div');
             if (message.includes("ERROR") || message.includes("FAILED")) {
-                line.className = 'text-red-500 break-words';
-                line.innerHTML = `<span class="opacity-50">[${time}]</span> <span class="font-bold">!! ${message}</span>`;
-            } else if (message.includes("SUCCESS")) {
-                line.className = 'text-white font-bold drop-shadow-[0_0_2px_#fff] break-words';
-                line.innerHTML = `<span class="text-matrix-green opacity-50">[${time}]</span> > ${message}`;
-            } else {
-                line.className = 'text-matrix-green break-words';
-                line.innerHTML = `<span class="opacity-50">[${time}]</span> > ${message}`;
-            }
-            terminal.appendChild(line);
-            terminal.scrollTop = terminal.scrollHeight;
-        }
-
-        submitBtn.addEventListener('click', async () => {
-            const targetUrl = urlInput.value.trim();
-            if (!targetUrl) {
-                addLog("ERROR: TARGET URL IS EMPTY.");
-                return;
-            }
-
-            terminal.innerHTML = '';
-            addLog(`SYSTEM WAKE. TARGET: ${targetUrl}`);
-            
-            const origBtnText = submitBtn.innerHTML;
-            submitBtn.innerHTML = `PROCESSING...`;
-            submitBtn.disabled = true;
-            submitBtn.classList.add('opacity-50');
-
-            try {
-                const tgUser = window.Telegram?.WebApp?.initDataUnsafe?.user;
-                const chatId = tgUser ? tgUser.id : null;
-
-                if (!chatId) {
-                    addLog(`WARNING: CHAT ID NOT FOUND. RUN INSIDE TELEGRAM!`);
-                } else {
-                    addLog(`DETECTED CHAT ID: ${chatId}`);
-                }
-
-                addLog(`GENERATING STREAMS (1080P, 720P, 360P, MP3)...`);
-                
-                const response = await fetch(BACKEND_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ 
-                        url: targetUrl,
-                        chat_id: chatId 
-                    })
-                });
-
-                const result = await response.json();
-
-                if (!response.ok || !result.success) {
-                    throw new Error(result.error || `SERVER ERROR: ${response.status}`);
-                }
-
-                addLog(`SUCCESS: QUALITY MENU SENT TO TELEGRAM CHAT!`);
-                addLog(`CLOSING APP...`);
-
-                setTimeout(() => {
-                    if (window.Telegram && window.Telegram.WebApp && typeof window.Telegram.WebApp.close === 'function') {
-                        window.Telegram.WebApp.close();
-                    }
-                }, 1500);
-
-            } catch (error) {
-                addLog(`CRITICAL ERROR: ${error.message}`);
-            } finally {
-                submitBtn.innerHTML = origBtnText;
-                submitBtn.disabled = false;
-                submitBtn.classList.remove('opacity-50');
-            }
-        });
-    </script>
-</body>
-</html>
