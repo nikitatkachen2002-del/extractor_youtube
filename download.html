@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MATRIX CUSTOM DOWNLOADER</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { mono: ['"Share Tech Mono"', 'monospace'] },
+                    colors: {
+                        matrix: { black: '#000000', green: '#00FF41', light: '#b8ffd0' }
+                    },
+                    boxShadow: {
+                        'neon': '0 0 10px rgba(0, 255, 65, 0.5), inset 0 0 10px rgba(0, 255, 65, 0.2)'
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <style>
+        body { background-color: #000; color: #00FF41; font-family: 'Share Tech Mono', monospace; }
+        #matrix-canvas { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -1; }
+        .glitch-anim { animation: textGlitch 2s infinite; }
+        @keyframes textGlitch {
+            0%, 95%, 100% { opacity: 1; transform: translate(0, 0); }
+            96% { opacity: 0.8; transform: translate(-2px, 1px); }
+            97% { opacity: 0.9; transform: translate(2px, -1px); }
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4">
+    
+    <canvas id="matrix-canvas"></canvas>
+
+    <main class="w-full max-w-2xl bg-matrix-black/90 backdrop-blur-sm border border-matrix-green shadow-neon p-6 flex flex-col gap-6 relative z-10 text-center">
+        <header class="border-b border-matrix-green/50 pb-4">
+            <h1 class="text-2xl sm:text-3xl font-bold tracking-widest glitch-anim drop-shadow-[0_0_5px_rgba(0,255,65,0.8)]">
+                MATRIX SECURE DOWNLOADER
+            </h1>
+            <p class="text-matrix-green/70 text-sm mt-2">SYSTEM.PROTOCOL: DIRECT_FETCH</p>
+        </header>
+
+        <div id="statusArea" class="py-10">
+            <p id="statusText" class="text-lg animate-pulse">ОБРАБОТКА ДАННЫХ... ПОЖАЛУЙСТА, ПОДОЖДИТЕ.</p>
+        </div>
+
+        <div id="buttonsArea" class="hidden flex-col gap-4">
+            <!-- Сюда динамически добавятся кнопки скачивания -->
+        </div>
+    </main>
+
+    <script>
+        // Анимация матрицы на фоне
+        const canvas = document.getElementById('matrix-canvas');
+        const ctx = canvas.getContext('2d');
+        let width, height, columns;
+        const drops = [];
+        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%^&*()'.split('');
+
+        function initMatrix() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+            const fontSize = 16;
+            columns = width / fontSize;
+            drops.length = 0;
+            for (let x = 0; x < columns; x++) drops[x] = Math.random() * -100;
+            ctx.font = fontSize + 'px "Share Tech Mono"';
+        }
+
+        function drawMatrix() {
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+            ctx.fillRect(0, 0, width, height);
+            ctx.fillStyle = '#0F0';
+            ctx.font = '16px "Share Tech Mono"';
+            for (let i = 0; i < drops.length; i++) {
+                const text = chars[Math.floor(Math.random() * chars.length)];
+                ctx.fillText(text, i * 16, drops[i] * 16);
+                if (drops[i] * 16 > height && Math.random() > 0.975) drops[i] = 0;
+                drops[i]++;
+            }
+        }
+        initMatrix();
+        window.addEventListener('resize', initMatrix);
+        setInterval(drawMatrix, 33);
+
+        // --- УКАЖИ ЗДЕСЬ ССЫЛКУ НА СВОЙ CLOUDFLARE WORKER ---
+        const BACKEND_URL = "https://floral-art-1918.nikita-tkachen2002.workers.dev";
+
+        async function processDownload() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const targetVideo = urlParams.get('video');
+            const statusText = document.getElementById('statusText');
+            const buttonsArea = document.getElementById('buttonsArea');
+
+            if (!targetVideo) {
+                statusText.innerText = "ОШИБКА: ВИДЕО НЕ УКАЗАНО В ССЫЛКЕ.";
+                statusText.classList.replace('text-matrix-green', 'text-red-500');
+                return;
+            }
+
+            try {
+                // Отправляем запрос на наш Cloudflare Worker
+                const response = await fetch(BACKEND_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    // Обрати внимание: мы НЕ передаем chat_id. Сервер поймет, что это веб-запрос, и просто вернет ссылки.
+                    body: JSON.stringify({ url: targetVideo })
+                });
+
+                const result = await response.json();
+
+                if (!result.success || !result.links) {
+                    throw new Error("Не удалось расшифровать видео.");
+                }
+
+                statusText.innerText = "ПОТОКИ ИЗОЛИРОВАНЫ. ВЫБЕРИТЕ ФОРМАТ:";
+                statusText.classList.remove('animate-pulse');
+                buttonsArea.classList.remove('hidden');
+                buttonsArea.classList.add('flex');
+
+                // Функция для создания кнопок
+                const createBtn = (text, link) => {
+                    if (!link) return;
+                    const btn = document.createElement('a');
+                    btn.href = link;
+                    btn.target = "_blank"; // Открываем скачивание в новой вкладке
+                    btn.className = "block w-full bg-black border border-matrix-green text-matrix-green font-bold py-4 px-6 uppercase tracking-widest shadow-neon hover:bg-matrix-green hover:text-black transition-all cursor-pointer";
+                    btn.innerText = text;
+                    buttonsArea.appendChild(btn);
+                };
+
+                // Рисуем кнопки из полученных данных
+                createBtn("> СКАЧАТЬ 1080P (FULL HD) <", result.links.url1080);
+                createBtn("> СКАЧАТЬ 720P (HD) <", result.links.url720);
+                createBtn("> СКАЧАТЬ 360P (SD) <", result.links.url360);
+                createBtn("> СКАЧАТЬ АУДИО (MP3) <", result.links.urlAudio);
+
+                if (buttonsArea.children.length === 0) {
+                    throw new Error("Доступных потоков для скачивания не найдено.");
+                }
+
+            } catch (error) {
+                statusText.innerText = `КРИТИЧЕСКАЯ ОШИБКА: ${error.message}`;
+                statusText.classList.replace('text-matrix-green', 'text-red-500');
+                statusText.classList.remove('animate-pulse');
+            }
+        }
+
+        // Запускаем процесс при загрузке страницы
+        window.onload = processDownload;
+    </script>
+</body>
+</html>
