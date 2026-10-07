@@ -5,10 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>MATRIX YOUTUBE EXTRACTOR</title>
     
+    <!-- Подключаем библиотеку Telegram для взаимодействия с ботом -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <!-- Подключаем TailwindCSS для быстрой стилизации -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Подключаем хакерский шрифт -->
     <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
     
+    <!-- Настройки цветов и теней для Tailwind -->
     <script>
         tailwind.config = {
             theme: {
@@ -29,6 +33,7 @@
         }
     </script>
     
+    <!-- Кастомные стили CSS для эффектов (скроллбар, глитч) -->
     <style>
         body { background-color: #000; color: #00FF41; font-family: 'Share Tech Mono', monospace; overflow-x: hidden; }
         #matrix-canvas { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -1; }
@@ -51,8 +56,10 @@
 </head>
 <body class="min-h-screen flex items-center justify-center p-4">
     
+    <!-- Холст для падающих зеленых букв -->
     <canvas id="matrix-canvas"></canvas>
 
+    <!-- Основной контейнер интерфейса -->
     <main class="w-full max-w-4xl bg-matrix-black/80 backdrop-blur-sm border border-matrix-green shadow-neon p-6 flex flex-col gap-6 relative z-10">
         <header class="border-b border-matrix-green/50 pb-4 text-center sm:text-left">
             <h1 class="text-2xl sm:text-4xl font-bold tracking-widest glitch-anim drop-shadow-[0_0_5px_rgba(0,255,65,0.8)]">
@@ -61,6 +68,7 @@
             <p class="text-matrix-green/70 text-sm mt-2">SYSTEM.PROTOCOL: MULTI_QUALITY_DELIVERY</p>
         </header>
 
+        <!-- Форма ввода ссылки -->
         <div id="extractForm" class="flex flex-col gap-5">
             <div class="flex flex-col gap-2">
                 <label for="urlInput" class="text-sm font-bold tracking-widest text-matrix-light">> TARGET_YOUTUBE_URL</label>
@@ -76,6 +84,7 @@
             </div>
         </div>
 
+        <!-- Терминал для логов -->
         <section class="flex flex-col border border-matrix-green h-64 sm:h-80 bg-black/90 relative">
             <div class="flex items-center justify-between px-4 py-2 border-b border-matrix-green/50 bg-matrix-green/10">
                 <h3 class="text-xs font-bold uppercase tracking-widest text-matrix-light">Extraction_Logs</h3>
@@ -89,13 +98,15 @@
     </main>
 
     <script>
+        // 1. РАСШИРЕНИЕ ОКНА ТЕЛЕГРАМ
         if (window.Telegram && window.Telegram.WebApp) {
             try {
-                window.Telegram.WebApp.expand();
-                window.Telegram.WebApp.ready();
+                window.Telegram.WebApp.expand(); // Открываем приложение на весь экран телефона
+                window.Telegram.WebApp.ready();  // Сообщаем телеграму, что мы готовы
             } catch (e) { console.log("Браузерный режим"); }
         }
 
+        // 2. АНИМАЦИЯ МАТРИЦЫ (ФОН)
         const canvas = document.getElementById('matrix-canvas');
         const ctx = canvas.getContext('2d');
         let width, height, columns;
@@ -129,17 +140,19 @@
         window.addEventListener('resize', initMatrix);
         setInterval(drawMatrix, 33);
 
-        // --- ВНИМАНИЕ: УКАЖИ ЗДЕСЬ ССЫЛКУ НА СВОЙ CLOUDFLARE WORKER ---
-        const BACKEND_URL = "https://floral-art-1918.nikita-tkachen2002.workers.dev
-";
+        // 3. НАСТРОЙКИ ПОДКЛЮЧЕНИЯ
+        // ВНИМАНИЕ: Ошибка была здесь! Я добавил https:// и /extract в конец
+        const BACKEND_URL = "https://floral-art-1918.nikita-tkachen2002.workers.dev/extract";
 
         const submitBtn = document.getElementById('submitBtn');
         const urlInput = document.getElementById('urlInput');
         const terminal = document.getElementById('terminal');
 
+        // 4. ФУНКЦИЯ ДЛЯ ДОБАВЛЕНИЯ ТЕКСТА В ТЕРМИНАЛ
         function addLog(message) {
             const time = new Date().toLocaleTimeString('en-US', { hour12: false, hour: "2-digit", minute: "2-digit", second: "2-digit" });
             const line = document.createElement('div');
+            // Раскрашиваем логи: красные для ошибок, белые для успеха
             if (message.includes("ERROR") || message.includes("FAILED")) {
                 line.className = 'text-red-500 break-words';
                 line.innerHTML = `<span class="opacity-50">[${time}]</span> <span class="font-bold">!! ${message}</span>`;
@@ -151,38 +164,42 @@
                 line.innerHTML = `<span class="opacity-50">[${time}]</span> > ${message}`;
             }
             terminal.appendChild(line);
-            terminal.scrollTop = terminal.scrollHeight;
+            terminal.scrollTop = terminal.scrollHeight; // Автоматически крутим вниз
         }
 
+        // 5. ГЛАВНОЕ ДЕЙСТВИЕ: НАЖАТИЕ НА КНОПКУ
         submitBtn.addEventListener('click', async () => {
             const targetUrl = urlInput.value.trim();
+            
+            // Проверка: ссылка должна быть с Ютуба
             if (!targetUrl.includes('youtube.com') && !targetUrl.includes('youtu.be')) {
                 addLog("ERROR: INVALID YOUTUBE URL.");
                 return;
             }
 
-            terminal.innerHTML = '';
+            terminal.innerHTML = ''; // Очищаем старые логи
             addLog(`SYSTEM WAKE. TARGET: ${targetUrl}`);
             
+            // Меняем вид кнопки, чтобы было понятно, что процесс пошел
             const origBtnText = submitBtn.innerHTML;
             submitBtn.innerHTML = `PROCESSING...`;
             submitBtn.disabled = true;
             submitBtn.classList.add('opacity-50');
 
             try {
+                // Получаем ID пользователя из Телеграма
                 const tgUser = window.Telegram?.WebApp?.initDataUnsafe?.user;
                 const chatId = tgUser ? tgUser.id : null;
 
                 if (!chatId) {
                     addLog(`WARNING: CHAT ID NOT FOUND. RUN INSIDE TELEGRAM!`);
-                    // Для тестов вне телеграма можно прервать выполнение
-                    // return; 
                 } else {
                     addLog(`DETECTED CHAT ID: ${chatId}`);
                 }
 
                 addLog(`SENDING TARGET TO CLOUDFLARE WORKER...`);
                 
+                // 6. ОТПРАВКА ДАННЫХ НА ВОРКЕР (СЕРВЕР)
                 const response = await fetch(BACKEND_URL, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -194,6 +211,7 @@
 
                 const result = await response.json();
 
+                // Если сервер ответил ошибкой
                 if (!response.ok || !result.success) {
                     throw new Error(result.error || `SERVER ERROR: ${response.status}`);
                 }
@@ -201,6 +219,7 @@
                 addLog(`SUCCESS: QUALITY MENU SENT TO TELEGRAM CHAT!`);
                 addLog(`CLOSING APP...`);
 
+                // 7. АВТОМАТИЧЕСКОЕ ЗАКРЫТИЕ ПРИЛОЖЕНИЯ
                 setTimeout(() => {
                     if (window.Telegram && window.Telegram.WebApp && typeof window.Telegram.WebApp.close === 'function') {
                         window.Telegram.WebApp.close();
@@ -208,8 +227,10 @@
                 }, 1500);
 
             } catch (error) {
+                // Ловим любые ошибки сети или сервера
                 addLog(`CRITICAL ERROR: ${error.message}`);
             } finally {
+                // Возвращаем кнопку в исходное состояние
                 submitBtn.innerHTML = origBtnText;
                 submitBtn.disabled = false;
                 submitBtn.classList.remove('opacity-50');
